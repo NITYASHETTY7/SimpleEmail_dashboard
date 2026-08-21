@@ -35,11 +35,5 @@ const envSchema = z.object({
   DEFAULT_SENDER_NAME: z.string().default('Oliver Brown'),
 });
 
-const parsedEnv = envSchema.safeParse(process.env);
-
-if (!parsedEnv.success) {
-  console.error('❌ Invalid environment variables:', parsedEnv.error.format());
-  process.exit(1);
-}
-
-export const env = parsedEnv.data;
+export const env = envSchema.parse(process.env || {});
+export type EnvConfig = z.infer<typeof envSchema>;

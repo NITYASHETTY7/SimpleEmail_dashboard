@@ -54,6 +54,7 @@ export interface AuthenticatedUser {
   email: string;
   name?: string | null;
   avatarUrl?: string | null;
+  googleId?: string | null;
 }
 
 export interface RateLimitCheckResult {

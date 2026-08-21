@@ -71,17 +71,10 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
 
   // Email Fields
   const [subject, setSubject] = useState('');
-  const [bodyHtml, setBodyHtml] = useState('hey , am sending this email to test');
+  const [bodyHtml, setBodyHtml] = useState('');
 
   // Attachments
-  const [attachments, setAttachments] = useState<AttachmentFile[]>([
-    {
-      id: 'default-tennis-img',
-      name: 'attachment.jpg',
-      url: 'https://images.unsplash.com/photo-1599586120429-48281b6f0ece?w=400&auto=format&fit=crop&q=80',
-      type: 'image/jpeg',
-    },
-  ]);
+  const [attachments, setAttachments] = useState<AttachmentFile[]>([]);
 
   // Delay & Hourly Limit
   const [delayBetweenSeconds, setDelayBetweenSeconds] = useState<number>(2);
