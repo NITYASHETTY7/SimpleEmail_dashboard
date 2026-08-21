@@ -24,29 +24,63 @@ A production-grade, distributed **Email Job Scheduler service and Analytics Dash
 
 ---
 
-## 🌟 Extra & Out-of-Scope Highlights (Above & Beyond)
+## 🌟 Complete List of Extra Features & Granular Enhancements
 
-In addition to all core requirements, the following production-grade features were built:
+Here is the exhaustive list of all production-grade features and minute details added:
 
-1. **👑 SuperAdmin Multi-Tenant Mode (`superadmin@gmail.com`)**:
-   * Logging in with `superadmin@gmail.com` unlocks a system-wide view displaying **all scheduled and sent emails across every user profile** in the database.
-   * Standard users (via Google OAuth or email sign-in) receive an isolated, private workspace starting with a clean inbox showing strictly their own emails.
+### 1. 👑 SuperAdmin Oversight View (`superadmin@gmail.com`)
+* Logging in with `superadmin@gmail.com` bypasses tenant filters to display **all historical scheduled and sent emails across every user profile** in the database.
+* Standard users (via Google OAuth or email sign-in) get an isolated workspace starting with a clean inbox showing only their own emails.
 
-2. **🖼️ In-App Email Detail Modal & Fullscreen Reader**:
-   * Clicking any row in either the Scheduled or Sent table opens a modal showing the rendered HTML body, recipient/sender metadata, retry counts, and throttle parameters.
-   * Includes a **Fullscreen Toggle (`⤢`)** for distraction-free, large-canvas reading.
+### 2. 🔲 In-App Email Detail Modal with Fullscreen Reader Mode
+* Clicking any email row in either Scheduled or Sent tab opens a detail viewer showing rendered HTML body, sender/recipient metadata, retry counts, and throttle settings.
+* **Fullscreen Toggle (`⤢` / `⤡`)**: Expands the viewer to `max-w-6xl` full-page reader mode for clean, large-canvas reading.
+* **One-Click Ethereal Link**: Direct "Open in Ethereal Inbox" button for delivered emails.
 
-3. **📸 Image Attachment Embedding**:
-   * Uploading image attachments embeds them directly into the email body with responsive, natural aspect ratio scaling (`object-fit: contain`) without awkward cropping.
+### 3. 📸 Crisp, Natural Aspect Ratio Embedded Image Attachments
+* Uploading image attachments embeds them directly into the email body (`<img ... />`).
+* Uses `object-fit: contain` with auto-height up to `480px` and rounded borders, preserving full natural proportions without cropping diagrams or logos.
 
-4. **✨ Live Real-Time Auto-Polling**:
-   * The dashboard auto-syncs every 3.5 seconds. If an email is currently open in the detail modal while its scheduled time arrives, the modal automatically transitions from `SCHEDULED` to `SENT` and reveals the **"Open in Ethereal Inbox"** button in real time.
+### 4. ✍️ Selection-Preserving Rich Text Editor Toolbar
+* Floating toolbar with:
+  * **Headings Dropdown**: Normal text, Large Heading 1 (`H1`), Subheading 2 (`H2`).
+  * **Styling**: Bold (`B`), Italic (`I`), Underline (`U`), Strikethrough (`S`).
+  * **Alignment**: Left, Center, Right.
+  * **Lists**: Numbered list (`1.`, `2.`) and Bulleted list (`•`) with custom indentation and outside disc markers.
+  * **Green Highlight Flag**: Quick highlight in ReachInbox signature green (`#00AA4F`).
+  * **Blockquote**: Single clean green left-border quote that prevents cumulative nested border stacking.
+  * **Undo / Redo**: Quick history actions.
+* **Selection Preservation**: Toolbar clicks do not wipe or collapse highlighted text selections in Chromium browsers.
 
-5. **📂 Client-Side & Server-Side Lead Parsing**:
-   * CSV and TXT files are parsed instantly on the client side for zero-latency UI responsiveness, with parallel backend validation and auto-detected column headers (`email`, `name`, `first_name`).
+### 5. 🏷️ Interactive Lead Chip Manager in Compose Modal
+* **Expandable Lead Chips**: Compact view shows initial leads with a green `+N` badge. Clicking expands/collapses the full lead list.
+* **Inline Lead Addition**: Type any email directly in the recipient bar and press `Enter` or `,` to add.
+* **Individual Chip Removal**: Remove individual recipients with `✕` or click `Clear Leads`.
+* **Collapsible Cc & Bcc**: Expandable rows supporting multiple Cc/Bcc recipient chips.
 
-6. **☁️ Multi-Cloud Deployment Ready**:
-   * Ready-to-deploy descriptors: [`render.yaml`](./render.yaml) for the persistent backend worker and [`vercel.json`](./vercel.json) for the frontend React SPA.
+### 6. 📂 Instant Client-Side & Server-Side Lead Parsing
+* Dual-layer CSV/TXT parsing: Client-side FileReader for zero-latency UI population + backend validation.
+* Auto-detects column headers (`email`, `mail`, `name`, `first_name`, or raw email lines).
+
+### 7. ⏱️ Active 10-Second Watchdog Reconciler
+* Continuous background watchdog running every 10 seconds to detect any overdue scheduled emails and dispatch them through BullMQ with zero delay (`delay = 0`).
+* Startup reconciliation restores pending jobs with accurate remaining delay offsets after server restarts.
+
+### 8. 🔄 Live Real-Time Auto-Polling
+* Main dashboard auto-refreshes every 3.5 seconds.
+* Active detail modal polls in the background to automatically transition badges from `SCHEDULED` to `SENT` and reveal the Ethereal preview link the moment an email is delivered.
+
+### 9. 🗑️ Hover Quick-Delete for Email Records
+* Red trash icon (`Trash2`) on hover over any email row to delete individual emails cleanly.
+
+### 10. 🛡️ Resilient Authentication & Clean Login State
+* Login inputs start completely empty with `autoComplete="off"` (no browser auto-fill).
+* Fallback demo authentication for instant zero-config evaluation.
+* Clear error banners for Google OAuth domain authorization.
+
+### 11. ☁️ Production Cloud Deployment Descriptors
+* **Render Blueprint** ([`render.yaml`](./render.yaml)) for persistent Node + BullMQ background queue workers.
+* **Vercel SPA Configuration** ([`vercel.json`](./vercel.json)) with route rewrites and TypeScript environment typing.
 
 ---
 
@@ -227,3 +261,4 @@ npm run dev
 1. **Ethereal Test SMTP**: Used Ethereal SMTP to simulate real email transport with public preview links without incurring live domain reputation risks.
 2. **SQLite / PostgreSQL Hybrid**: Configured SQLite for zero-friction local development while providing full Prisma compatibility for PostgreSQL deployments on cloud platforms like Render.
 3. **Sliding Window Rate Limiter**: Implemented atomic Redis hour-bucket keys (`ratelimit:sender:{email}:{hourWindow}`) which offer $O(1)$ performance and low memory overhead under high concurrency.
+4. **Google Cloud Origin Propagation**: Google Cloud Console OAuth origins take 2 to 5 minutes to propagate after adding new deployment domains.

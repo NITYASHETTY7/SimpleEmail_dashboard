@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { env } from './config/env';
-import { connectDB } from './config/db';
+import { connectDB, prisma } from './config/db';
 import { getOrCreateDefaultTransporter } from './config/mailer';
 import { setupEmailWorker } from './queues/email.worker';
 import { PersistenceService } from './services/persistence.service';
