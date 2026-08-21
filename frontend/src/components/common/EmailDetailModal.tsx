@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { EmailJob } from '../../types';
+import { api } from '../../services/api';
 import {
   X,
   Clock,
