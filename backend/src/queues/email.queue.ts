@@ -29,6 +29,13 @@ export const emailQueue = new Queue<EmailJobPayload>(EMAIL_QUEUE_NAME, {
 export async function scheduleEmailJob(payload: EmailJobPayload, delayMs: number) {
   const deterministicJobId = `email-${payload.emailJobId}`;
   
+  try {
+    const existing = await emailQueue.getJob(deterministicJobId);
+    if (existing) {
+      await existing.remove();
+    }
+  } catch {}
+
   const job = await emailQueue.add('send-email', payload, {
     jobId: deterministicJobId,
     delay: Math.max(0, delayMs),

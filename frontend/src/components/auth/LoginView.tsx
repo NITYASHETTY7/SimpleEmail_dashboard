@@ -31,8 +31,8 @@ const GoogleIcon: React.FC = () => (
 // 2. Real Google OAuth Button (MUST be inside GoogleOAuthProvider)
 const RealGoogleOAuthButton: React.FC<{
   onSuccess: (googleUser: any) => void;
-  onFallback: () => void;
-}> = ({ onSuccess, onFallback }) => {
+  onError: (errMsg: string) => void;
+}> = ({ onSuccess, onError }) => {
   const loginWithGoogle = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
@@ -40,13 +40,20 @@ const RealGoogleOAuthButton: React.FC<{
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         });
         const googleUser = await res.json();
-        onSuccess(googleUser);
-      } catch {
-        onFallback();
+        if (googleUser && googleUser.email) {
+          onSuccess(googleUser);
+        } else {
+          onError('Could not fetch profile from Google.');
+        }
+      } catch (err: any) {
+        onError('Google profile fetch failed: ' + err.message);
       }
     },
-    onError: () => {
-      onFallback();
+    onError: (errorResponse) => {
+      console.error('Google OAuth Error:', errorResponse);
+      onError(
+        'Google Login was cancelled or blocked. If on Vercel, ensure your Vercel domain is added to Authorised JavaScript Origins in Google Cloud Console.'
+      );
     },
   });
 
@@ -79,6 +86,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const envClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
   const hasRealClientId =
@@ -89,10 +97,11 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
 
   const handleGoogleSuccess = async (googleUser: any) => {
     setIsLoading(true);
+    setAuthError(null);
     try {
       const payload = {
-        email: googleUser.email || 'nityashetty21@gmail.com',
-        name: googleUser.name || 'Nitya Shetty',
+        email: googleUser.email,
+        name: googleUser.name || googleUser.email.split('@')[0],
         picture:
           googleUser.picture ||
           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
@@ -101,6 +110,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
       const token = btoa(JSON.stringify(payload));
       await loginWithGoogleToken(token);
       onLoginSuccess?.();
+    } catch (err: any) {
+      setAuthError('Authentication failed: ' + err.message);
     } finally {
       setIsLoading(false);
     }
@@ -108,6 +119,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
 
   const handleFallbackLogin = async (customEmail?: string) => {
     setIsLoading(true);
+    setAuthError(null);
     try {
       const userEmail = (customEmail || email || 'oliver.brown@domain.io').trim();
       let userName = userEmail.split('@')[0];
@@ -150,12 +162,18 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
           Login
         </h1>
 
+        {authError && (
+          <div className="mb-5 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 leading-relaxed">
+            {authError}
+          </div>
+        )}
+
         {/* Login with Google Button */}
         {hasRealClientId ? (
           <GoogleOAuthProvider clientId={envClientId}>
             <RealGoogleOAuthButton
               onSuccess={handleGoogleSuccess}
-              onFallback={() => handleFallbackLogin()}
+              onError={(msg) => setAuthError(msg)}
             />
           </GoogleOAuthProvider>
         ) : (

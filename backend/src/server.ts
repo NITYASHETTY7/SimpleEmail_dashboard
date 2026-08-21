@@ -54,6 +54,7 @@ async function startServer() {
 
     // 4. Persistence & Restart Reconciler
     await PersistenceService.reconcileJobsOnStartup();
+    PersistenceService.startBackgroundReconciler();
 
     // 5. Start Express HTTP Server
     const server = app.listen(env.PORT, () => {
