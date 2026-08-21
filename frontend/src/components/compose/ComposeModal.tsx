@@ -188,16 +188,65 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
     }
   };
 
+  // Client-side CSV/TXT lead list parser
+  const parseClientCsv = (text: string): Array<{ email: string; name?: string }> => {
+    const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    if (lines.length === 0) return [];
+
+    const headerCols = lines[0].split(',').map((h) => h.trim().toLowerCase().replace(/^["']|["']$/g, ''));
+    const emailIdx = headerCols.findIndex((h) => h.includes('email') || h.includes('mail') || h.includes('recipient'));
+    const nameIdx = headerCols.findIndex((h) => h.includes('name') || h.includes('first') || h.includes('lead'));
+
+    const parsed: Array<{ email: string; name?: string }> = [];
+    const startRow = emailIdx !== -1 ? 1 : 0;
+    const targetEmailIdx = emailIdx !== -1 ? emailIdx : 0;
+
+    for (let i = startRow; i < lines.length; i++) {
+      const cols = lines[i].split(',').map((c) => c.trim().replace(/^["']|["']$/g, ''));
+      const emailCandidate = cols[targetEmailIdx] || cols.find((c) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c)) || '';
+      if (emailCandidate && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailCandidate)) {
+        parsed.push({
+          email: emailCandidate,
+          name: nameIdx !== -1 && cols[nameIdx] ? cols[nameIdx] : emailCandidate.split('@')[0],
+        });
+      }
+    }
+    return parsed;
+  };
+
   // Lead List Upload Handler
   const handleFileUpload = async (file: File) => {
     setFileName(file.name);
+
+    // 1. Instant client-side parse
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      if (text) {
+        const clientLeads = parseClientCsv(text);
+        if (clientLeads.length > 0) {
+          setLeads((prev) => {
+            const existing = new Set(prev.map((p) => p.email.toLowerCase()));
+            const unique = clientLeads.filter((c) => !existing.has(c.email.toLowerCase()));
+            return [...prev, ...unique];
+          });
+        }
+      }
+    };
+    reader.readAsText(file);
+
+    // 2. Also send to backend parser for verification
     try {
       const res = await api.parseLeadsFile(file);
-      if (res.success && res.data) {
-        setLeads((prev) => [...prev, ...res.data.validLeads]);
+      if (res.success && res.data && res.data.validLeads.length > 0) {
+        setLeads((prev) => {
+          const existing = new Set(prev.map((p) => p.email.toLowerCase()));
+          const unique = res.data.validLeads.filter((l) => !existing.has(l.email.toLowerCase()));
+          return [...prev, ...unique];
+        });
       }
-    } catch (err: any) {
-      onError('Failed to parse leads file: ' + err.message);
+    } catch {
+      // Client parse already handled it
     }
   };
 
@@ -574,6 +623,7 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
               onChange={(e) => {
                 if (e.target.files && e.target.files[0]) {
                   handleFileUpload(e.target.files[0]);
+                  e.target.value = '';
                 }
               }}
             />

@@ -11,6 +11,7 @@
 /* Rich text editor styling inside contentEditable */
 .rich-editor-content {
   outline: none;
+  min-height: 160px;
 }
 
 .rich-editor-content h1 {
@@ -37,26 +38,32 @@
   line-height: 1.6;
 }
 
-.rich-editor-content ul {
+/* Enforce Bullet Lists and Numbered Lists */
+.rich-editor-content ul,
+ul.rich-list {
   list-style-type: disc !important;
-  margin-left: 1.5rem !important;
-  margin-top: 0.35rem;
-  margin-bottom: 0.35rem;
+  list-style-position: outside !important;
+  padding-left: 2rem !important;
+  margin: 0.5rem 0 !important;
 }
 
-.rich-editor-content ol {
+.rich-editor-content ol,
+ol.rich-list {
   list-style-type: decimal !important;
-  margin-left: 1.5rem !important;
-  margin-top: 0.35rem;
-  margin-bottom: 0.35rem;
+  list-style-position: outside !important;
+  padding-left: 2rem !important;
+  margin: 0.5rem 0 !important;
 }
 
-.rich-editor-content li {
-  margin-top: 0.15rem;
-  margin-bottom: 0.15rem;
+.rich-editor-content li,
+li.rich-item {
+  display: list-item !important;
+  list-style: inherit !important;
+  margin-top: 0.2rem !important;
+  margin-bottom: 0.2rem !important;
 }
 
-/* Clean, single border blockquote with no cumulative background nesting */
+/* Clean, single border blockquote */
 .rich-editor-content blockquote {
   border-left: 3px solid #00AA4F !important;
   padding-left: 0.75rem !important;

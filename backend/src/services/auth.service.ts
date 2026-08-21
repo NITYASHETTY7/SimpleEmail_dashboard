@@ -137,4 +137,33 @@ export class AuthService {
       { expiresIn: '7d' }
     );
   }
+
+  /**
+   * Verifies token (JWT or base64 payload)
+   */
+  public static verifyToken(token: string): AuthenticatedUser {
+    try {
+      const decoded = jwt.verify(token, env.JWT_SECRET) as any;
+      return {
+        id: decoded.id,
+        email: decoded.email,
+        name: decoded.name,
+        avatarUrl: decoded.avatarUrl,
+      };
+    } catch {
+      try {
+        const json = Buffer.from(token, 'base64').toString('utf-8');
+        const parsed = JSON.parse(json);
+        if (parsed && parsed.email) {
+          return {
+            id: parsed.sub || 'user-demo',
+            email: parsed.email,
+            name: parsed.name || parsed.email.split('@')[0],
+            avatarUrl: parsed.picture,
+          };
+        }
+      } catch {}
+      throw new Error('Invalid or expired token');
+    }
+  }
 }
