@@ -109,14 +109,19 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   const handleFallbackLogin = async (customEmail?: string) => {
     setIsLoading(true);
     try {
-      const userEmail = customEmail || email || 'nityashetty21@gmail.com';
-      const userName = userEmail.includes('@')
-        ? userEmail.split('@')[0]
-        : 'Nitya Shetty';
+      const userEmail = (customEmail || email || 'oliver.brown@domain.io').trim();
+      let userName = userEmail.split('@')[0];
+      if (userEmail.toLowerCase().includes('superadmin')) {
+        userName = 'Super Admin';
+      } else if (userEmail.toLowerCase().includes('oliver')) {
+        userName = 'Oliver Brown';
+      } else if (userEmail.toLowerCase().includes('nitya')) {
+        userName = 'Nitya Shetty';
+      }
 
       const payload = {
         email: userEmail,
-        name: userName === 'nityashetty21' ? 'Nitya Shetty' : userName,
+        name: userName,
         picture:
           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
         sub: 'user-' + Date.now(),
@@ -131,6 +136,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
 
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email.trim()) {
+      return;
+    }
     handleFallbackLogin(email);
   };
 
@@ -163,10 +171,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
         </div>
 
         {/* Form Inputs */}
-        <form onSubmit={handleEmailSubmit} className="space-y-4">
+        <form onSubmit={handleEmailSubmit} className="space-y-4" autoComplete="off">
           <div>
             <input
-              type="text"
+              type="email"
+              name="email"
+              autoComplete="off"
               placeholder="Email ID"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -177,6 +187,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
           <div>
             <input
               type="password"
+              name="password"
+              autoComplete="new-password"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

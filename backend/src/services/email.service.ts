@@ -240,12 +240,22 @@ export class EmailService {
       status: { in: ['SCHEDULED', 'PROCESSING', 'RATE_LIMITED_RESCHEDULED'] },
     };
 
+    if (params.userId) {
+      where.userId = params.userId;
+    }
+
     if (params.search) {
-      where.OR = [
-        { recipientEmail: { contains: params.search } },
-        { subject: { contains: params.search } },
-        { senderEmail: { contains: params.search } },
+      where.AND = [
+        ...(params.userId ? [{ userId: params.userId }] : []),
+        {
+          OR: [
+            { recipientEmail: { contains: params.search } },
+            { subject: { contains: params.search } },
+            { senderEmail: { contains: params.search } },
+          ],
+        },
       ];
+      delete where.userId;
     }
 
     const [items, total] = await Promise.all([
@@ -288,12 +298,22 @@ export class EmailService {
       status: { in: allowedStatuses },
     };
 
+    if (params.userId) {
+      where.userId = params.userId;
+    }
+
     if (params.search) {
-      where.OR = [
-        { recipientEmail: { contains: params.search } },
-        { subject: { contains: params.search } },
-        { senderEmail: { contains: params.search } },
+      where.AND = [
+        ...(params.userId ? [{ userId: params.userId }] : []),
+        {
+          OR: [
+            { recipientEmail: { contains: params.search } },
+            { subject: { contains: params.search } },
+            { senderEmail: { contains: params.search } },
+          ],
+        },
       ];
+      delete where.userId;
     }
 
     const [items, total] = await Promise.all([
@@ -374,19 +394,21 @@ export class EmailService {
   /**
    * Get Dashboard stats summary
    */
-  public static async getStats(): Promise<DashboardStats> {
+  public static async getStats(userId?: string): Promise<DashboardStats> {
+    const userFilter = userId ? { userId } : {};
+
     const [scheduled, sent, failed, rescheduled, senders] = await Promise.all([
       prisma.emailJob.count({
-        where: { status: { in: ['SCHEDULED', 'PROCESSING'] } },
+        where: { ...userFilter, status: { in: ['SCHEDULED', 'PROCESSING'] } },
       }),
       prisma.emailJob.count({
-        where: { status: 'SENT' },
+        where: { ...userFilter, status: 'SENT' },
       }),
       prisma.emailJob.count({
-        where: { status: 'FAILED' },
+        where: { ...userFilter, status: 'FAILED' },
       }),
       prisma.emailJob.count({
-        where: { status: 'RATE_LIMITED_RESCHEDULED' },
+        where: { ...userFilter, status: 'RATE_LIMITED_RESCHEDULED' },
       }),
       prisma.senderAccount.count({
         where: { isActive: true },
@@ -397,6 +419,7 @@ export class EmailService {
     const oneHourAgo = new Date(Date.now() - 3600 * 1000);
     const hourlySentCount = await prisma.emailJob.count({
       where: {
+        ...userFilter,
         status: 'SENT',
         sentAt: { gte: oneHourAgo },
       },

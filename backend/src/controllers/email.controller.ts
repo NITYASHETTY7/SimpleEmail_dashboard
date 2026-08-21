@@ -121,8 +121,10 @@ export class EmailController {
       const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
       const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 20;
 
+      const isSuperAdmin = req.user?.email?.toLowerCase().includes('superadmin');
+
       const result = await EmailService.getScheduledEmails({
-        userId: req.user?.id,
+        userId: isSuperAdmin ? undefined : req.user?.id,
         search,
         page,
         limit,
@@ -148,8 +150,10 @@ export class EmailController {
       const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
       const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 20;
 
+      const isSuperAdmin = req.user?.email?.toLowerCase().includes('superadmin');
+
       const result = await EmailService.getSentEmails({
-        userId: req.user?.id,
+        userId: isSuperAdmin ? undefined : req.user?.id,
         search,
         statusFilter,
         page,
@@ -223,7 +227,8 @@ export class EmailController {
    */
   public static async getStats(req: AuthRequest, res: Response) {
     try {
-      const stats = await EmailService.getStats();
+      const isSuperAdmin = req.user?.email?.toLowerCase().includes('superadmin');
+      const stats = await EmailService.getStats(isSuperAdmin ? undefined : req.user?.id);
       return res.json({
         success: true,
         data: stats,
