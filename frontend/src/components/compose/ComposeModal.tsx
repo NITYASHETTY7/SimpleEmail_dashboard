@@ -123,11 +123,8 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Rich Text Action Handlers with Focus Preservation
+  // Rich Text Action Handlers with Selection Preservation
   const executeCommand = (command: string, value: string = '') => {
-    if (editorRef.current) {
-      editorRef.current.focus();
-    }
     document.execCommand(command, false, value);
     if (editorRef.current) {
       setBodyHtml(editorRef.current.innerHTML);
@@ -135,9 +132,6 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
   };
 
   const handleHeadingChange = (tag: string) => {
-    if (editorRef.current) {
-      editorRef.current.focus();
-    }
     document.execCommand('formatBlock', false, `<${tag}>`);
     if (editorRef.current) {
       setBodyHtml(editorRef.current.innerHTML);
@@ -146,9 +140,6 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
   };
 
   const toggleGreenColor = () => {
-    if (editorRef.current) {
-      editorRef.current.focus();
-    }
     if (isGreenActive) {
       document.execCommand('foreColor', false, '#111827');
       setIsGreenActive(false);
@@ -162,9 +153,6 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
   };
 
   const toggleQuote = () => {
-    if (editorRef.current) {
-      editorRef.current.focus();
-    }
     const selection = window.getSelection();
     let inBlockquote = false;
     if (selection && selection.rangeCount > 0) {
