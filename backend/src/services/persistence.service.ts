@@ -30,7 +30,7 @@ export class PersistenceService {
         const payload: EmailJobPayload = {
           emailJobId: job.id,
           senderEmail: job.senderEmail,
-          senderName: job.senderName || undefined,
+          senderName: (job as any).senderName || undefined,
           recipientEmail: job.recipientEmail,
           recipientName: job.recipientName || undefined,
           subject: job.subject,
@@ -72,7 +72,7 @@ export class PersistenceService {
           const payload: EmailJobPayload = {
             emailJobId: job.id,
             senderEmail: job.senderEmail,
-            senderName: job.senderName || undefined,
+            senderName: (job as any).senderName || undefined,
             recipientEmail: job.recipientEmail,
             recipientName: job.recipientName || undefined,
             subject: job.subject,
