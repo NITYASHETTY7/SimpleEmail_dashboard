@@ -1,0 +1,88 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  name      String?
+  avatarUrl String?
+  googleId  String?    @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  emailJobs   EmailJob[]
+  emailBatches EmailBatch[]
+}
+
+model SenderAccount {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String?
+  smtpHost    String   @default("smtp.ethereal.email")
+  smtpPort    Int      @default(587)
+  smtpUser    String?
+  smtpPass    String?
+  hourlyLimit Int      @default(100)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model EmailJob {
+  id              String      @id @default(cuid())
+  userId          String?
+  user            User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  senderEmail     String
+  recipientEmail  String
+  recipientName   String?
+  subject         String
+  body            String
+  status          String      @default("SCHEDULED") // SCHEDULED, PROCESSING, SENT, FAILED, RATE_LIMITED_RESCHEDULED, CANCELLED
+  scheduledAt     DateTime
+  sentAt          DateTime?
+  delayBetweenMs  Int         @default(2000)
+  hourlyLimit     Int         @default(100)
+  etherealUrl     String?
+  errorMessage    String?
+  retryCount      Int         @default(0)
+  bullmqJobId     String?     @unique
+  batchId         String?
+  batch           EmailBatch? @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([status])
+  @@index([scheduledAt])
+  @@index([senderEmail])
+  @@index([userId])
+}
+
+model EmailBatch {
+  id             String     @id @default(cuid())
+  userId         String?
+  user           User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  name           String     @default("Campaign")
+  totalLeads     Int        @default(0)
+  scheduledCount Int        @default(0)
+  sentCount      Int        @default(0)
+  failedCount    Int        @default(0)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  emailJobs EmailJob[]
+}
+
+model RateLimitAudit {
+  id                 String   @id @default(cuid())
+  senderEmail        String
+  windowKey          String
+  emailsSentInWindow Int      @default(0)
+  limit              Int
+  createdAt          DateTime @default(now())
+}
