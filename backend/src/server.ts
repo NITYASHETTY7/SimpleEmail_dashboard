@@ -52,11 +52,74 @@ async function startServer() {
     // 3. Initialize BullMQ Worker
     const worker = setupEmailWorker();
 
-    // 4. Persistence & Restart Reconciler
+    // 4. Seed initial sample data if brand new database
+    const totalEmails = await prisma.emailJob.count();
+    if (totalEmails === 0) {
+      console.log('🌱 Brand new database detected. Creating initial demo accounts and emails...');
+      const demoUser = await prisma.user.upsert({
+        where: { email: 'oliver.brown@domain.io' },
+        update: {},
+        create: {
+          email: 'oliver.brown@domain.io',
+          name: 'Oliver Brown',
+          avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+          googleId: 'demo-google-user-oliver',
+        },
+      });
+
+      await prisma.senderAccount.upsert({
+        where: { email: 'oliver.brown@domain.io' },
+        update: {},
+        create: {
+          email: 'oliver.brown@domain.io',
+          name: 'Oliver Brown',
+          hourlyLimit: 100,
+          smtpHost: 'smtp.ethereal.email',
+          smtpPort: 587,
+        },
+      });
+
+      // Seed 2 sample sent emails
+      await prisma.emailJob.create({
+        data: {
+          senderEmail: 'oliver.brown@domain.io',
+          recipientEmail: 'alex.morgan@company.com',
+          recipientName: 'Alex Morgan',
+          subject: 'ReachInbox Product Demo & Architecture',
+          body: 'Hi Alex,\n\nHere is our distributed BullMQ email scheduler architecture overview. Rate limiting and delay queues are fully functional.\n\nBest,\nOliver',
+          status: 'SENT',
+          scheduledAt: new Date(Date.now() - 3600 * 1000),
+          sentAt: new Date(Date.now() - 3590 * 1000),
+          etherealUrl: 'https://ethereal.email/message/WaQKMgKddxQDoou...preview',
+          delayBetweenMs: 2000,
+          hourlyLimit: 100,
+          userId: demoUser.id,
+        },
+      });
+
+      await prisma.emailJob.create({
+        data: {
+          senderEmail: 'oliver.brown@domain.io',
+          recipientEmail: 'sarah.connor@domain.io',
+          recipientName: 'Sarah Connor',
+          subject: 'Q3 Enterprise Scheduling Workflow',
+          body: 'Hello Sarah,\n\nWe have scheduled the Q3 outbound campaign. All rate limiters and multi-sender quotas are locked in.\n\nRegards,\nOliver',
+          status: 'SENT',
+          scheduledAt: new Date(Date.now() - 7200 * 1000),
+          sentAt: new Date(Date.now() - 7190 * 1000),
+          etherealUrl: 'https://ethereal.email/message/XbQKMgKddxQDoou...preview',
+          delayBetweenMs: 2000,
+          hourlyLimit: 100,
+          userId: demoUser.id,
+        },
+      });
+    }
+
+    // 5. Persistence & Restart Reconciler
     await PersistenceService.reconcileJobsOnStartup();
     PersistenceService.startBackgroundReconciler();
 
-    // 5. Start Express HTTP Server
+    // 6. Start Express HTTP Server
     const server = app.listen(env.PORT, () => {
       console.log(`\n=================================================`);
       console.log(`✅ [Server] Running on http://localhost:${env.PORT}`);
